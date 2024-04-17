@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -23,7 +22,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: vec![],
             comparator,
         }
     }
@@ -38,6 +37,51 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+
+        if self.count > 1 {
+            let mut cur = self.count - 1;
+            while cur > 0 {
+                let par = self.parent_idx(cur);
+                if (self.comparator)(&self.items[cur], &self.items[par]) {
+                    self.items.swap(cur, par);
+                    cur = par;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn pop(&mut self) -> T {
+        self.items.swap(0, self.count - 1);
+        let ret = self.items.pop().unwrap();
+        self.count -= 1;
+
+        // push down
+        let mut cur = 0;
+        while cur < self.count && self.children_present(cur) {
+            let lson = self.left_child_idx(cur);
+            let rson = self.right_child_idx(cur);
+            if rson >= self.count {
+                if (self.comparator)(&self.items[lson], &self.items[cur]) {
+                    self.items.swap(cur, lson);
+                    cur = lson;
+                } else {
+                    break;
+                }
+            } else {
+                let smson = self.smallest_child_idx(cur);
+                if (self.comparator)(&self.items[smson], &self.items[cur]) {
+                    self.items.swap(cur, smson);
+                    cur = smson;
+                } else {
+                    break;
+                }
+            }
+        }
+        ret
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -45,7 +89,7 @@ where
     }
 
     fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) <= self.count
+        self.left_child_idx(idx) <= self.count - 1
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
@@ -58,7 +102,14 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        if (self.comparator)(
+            &self.items[self.left_child_idx(idx)],
+            &self.items[self.right_child_idx(idx)],
+        ) {
+            return self.left_child_idx(idx);
+        } else {
+            return self.right_child_idx(idx);
+        }
     }
 }
 
@@ -85,7 +136,10 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        match self.count {
+            0 => None,
+            _x => Some(self.pop()),
+        }
     }
 }
 
